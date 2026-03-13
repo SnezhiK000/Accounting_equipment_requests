@@ -1,0 +1,53 @@
+from django.db import models
+
+class Должность(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name="ID")
+    наименование = models.String(verbose_name="Наименование должности")
+
+class Отдел(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name="ID")
+    наименование = models.String(verbose_name="Наименование отдела")
+
+class Кабинет(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name="ID")
+    номер_кабинета = models.String(verbose_name="Номер кабинета")
+
+class ТипОборудования(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name="ID")
+    наименование = models.String(verbose_name="Наименование типа")
+
+class СтатусПочинки(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name="ID")
+    наименование = models.String(verbose_name="Наименование статуса")
+
+class СтатусЗаявки(models.Model):
+    id = models.AutoField(primary_key=True, verbose_name="ID")
+    наименование = models.String(verbose_name="Наименование статуса")
+
+class Сотрудник(models.Model):
+    инн = models.String(primary_key=True, verbose_name="ИНН")
+    номер_телефона = models.String(verbose_name="Номер телефона")
+    фамилия = models.String(verbose_name="Фамилия")
+    имя = models.String(verbose_name="Имя")
+    отчество = models.String(verbose_name="Отчество")
+    должность = models.ForeignKey(Должность, on_delete=models.CASCADE, related_name='сотрудники', verbose_name="Должность")
+    отдел = models.ForeignKey(Отдел, on_delete=models.CASCADE, related_name='сотрудники', verbose_name="Отдел")
+    кабинет = models.ForeignKey(Кабинет, on_delete=models.CASCADE, related_name='сотрудники', verbose_name="Рабочее место")
+
+class Оборудование(models.Model):
+    инвентарный_номер = models.String(primary_key=True, verbose_name="Инвентарный номер")
+    комплектация = models.String(verbose_name="Комплектация")
+    закрепленный_кабинет = models.ForeignKey(Кабинет, on_delete=models.CASCADE, related_name='оборудование', verbose_name="Закрепленный кабинет")
+    тип = models.ForeignKey(ТипОборудования, on_delete=models.CASCADE, related_name='оборудование', verbose_name="Тип оборудования")
+    статус_починки = models.ForeignKey(СтатусПочинки, on_delete=models.CASCADE, related_name='оборудование', verbose_name="Статус починки")
+
+class Заявка(models.Model):
+    номер_акта = models.String(primary_key=True, verbose_name="Номер акта")
+    описание_неисправности = models.String(verbose_name="Описание неисправности")
+    дата_регистрации = models.DateTimeField(auto_now_add=True, verbose_name="Дата регистрации")
+    дата_выполнения = models.DateTimeField(verbose_name="Дата выполнения")
+    комментарий_исполнителя = models.String(verbose_name="Комментарий исполнителя")
+    заказчик = models.ForeignKey(Сотрудник, on_delete=models.CASCADE, related_name='заявки_заказчик', verbose_name="Заказчик")
+    назначенный_исполнитель = models.ForeignKey(Сотрудник, on_delete=models.CASCADE, related_name='заявки_исполнитель', verbose_name="Исполнитель")
+    оборудование = models.ForeignKey(Оборудование, on_delete=models.CASCADE, related_name='заявки', verbose_name="Оборудование")
+    статус = models.ForeignKey(СтатусЗаявки, on_delete=models.CASCADE, related_name='заявки', verbose_name="Статус заявки")
