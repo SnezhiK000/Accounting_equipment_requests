@@ -1,53 +1,67 @@
 from django.db import models
+from django.db import models
+#--------------------------------------------------------------
+#ДОЛЖНОСТЬ по совместительству Роли пользователей
+class Position(models.Model):
+    ROLE_CHOICES = [
+        ('technician', 'Техник'), #по совмесительству администратор
+        ('employee', 'Сотрудник'), #поросто сотрудник который может создать заявку с определенными формами
+    ]
+    role_name = models.CharField(max_length=250, choices=ROLE_CHOICES, unique=True)
+#--------------------------------------------------------------
 
-class Должность(models.Model):
-    id = models.AutoField(primary_key=True, verbose_name="ID")
-    наименование = models.String(verbose_name="Наименование должности")
+#ОТДЕЛ
+class Department(models.Model):
+    id = models.IntegerField(primary_key=True, verbose_name="ID")
+    name = models.CharField(verbose_name="Наименование отдела")
+#--------------------------------------------------------------
 
-class Отдел(models.Model):
-    id = models.AutoField(primary_key=True, verbose_name="ID")
-    наименование = models.String(verbose_name="Наименование отдела")
+#КАБИНЕТ
+class Office(models.Model):
+    id = models.IntegerField(primary_key=True, verbose_name="номер кабинета")
+#--------------------------------------------------------------
 
-class Кабинет(models.Model):
-    id = models.AutoField(primary_key=True, verbose_name="ID")
-    номер_кабинета = models.String(verbose_name="Номер кабинета")
+#ТИП ОБОРУДОВАНИЯ
+class EquipmentType(models.Model):
+    id = models.IntegerField(primary_key=True, verbose_name="ID")
+    name = models.CharField(verbose_name="Наименование типа")
+#--------------------------------------------------------------
 
-class ТипОборудования(models.Model):
-    id = models.AutoField(primary_key=True, verbose_name="ID")
-    наименование = models.String(verbose_name="Наименование типа")
+#СТАТУС ЗАЯВКИ
+class ApplicationStatus(models.Model):
+    id = models.IntegerField(primary_key=True, verbose_name="ID")
+    name = models.CharField(verbose_name="Наименование статуса")
+#--------------------------------------------------------------
 
-class СтатусПочинки(models.Model):
-    id = models.AutoField(primary_key=True, verbose_name="ID")
-    наименование = models.String(verbose_name="Наименование статуса")
+#СОТРУДНИК
+class Employee(models.Model):
+    inn = models.IntegerField(primary_key=True, verbose_name="ИНН")
+    number_phone= models.CharField(verbose_name="Номер телефона")
+    first_name = models.CharField(verbose_name="Фамилия")
+    name = models.CharField(verbose_name="Имя")
+    second_name = models.CharField(verbose_name="Отчество")
+    position = models.ForeignKey(Position, on_delete=models.CASCADE, verbose_name="Должность")
+    department = models.ForeignKey(Department, on_delete=models.CASCADE,verbose_name="Отдел")
+    office = models.ForeignKey(Office, on_delete=models.CASCADE, verbose_name="Рабочее место")
+    last_login = models.DateTimeField(null=True, blank=True) #Время последнего захода в приложениие
+#--------------------------------------------------------------
 
-class СтатусЗаявки(models.Model):
-    id = models.AutoField(primary_key=True, verbose_name="ID")
-    наименование = models.String(verbose_name="Наименование статуса")
+#ОБОРУДОВАНИЕ
+class Equipment(models.Model):
+    id = models.IntegerField(primary_key=True, verbose_name="Инвентарный номер")
+    set = models.CharField(verbose_name="Комплектация")
+    pin_office = models.ForeignKey(Office, on_delete=models.CASCADE, verbose_name="Закрепленный кабинет")
+    type = models.ForeignKey(EquipmentType, on_delete=models.CASCADE,verbose_name="Тип оборудования")
+#--------------------------------------------------------------
 
-class Сотрудник(models.Model):
-    инн = models.String(primary_key=True, verbose_name="ИНН")
-    номер_телефона = models.String(verbose_name="Номер телефона")
-    фамилия = models.String(verbose_name="Фамилия")
-    имя = models.String(verbose_name="Имя")
-    отчество = models.String(verbose_name="Отчество")
-    должность = models.ForeignKey(Должность, on_delete=models.CASCADE, related_name='сотрудники', verbose_name="Должность")
-    отдел = models.ForeignKey(Отдел, on_delete=models.CASCADE, related_name='сотрудники', verbose_name="Отдел")
-    кабинет = models.ForeignKey(Кабинет, on_delete=models.CASCADE, related_name='сотрудники', verbose_name="Рабочее место")
-
-class Оборудование(models.Model):
-    инвентарный_номер = models.String(primary_key=True, verbose_name="Инвентарный номер")
-    комплектация = models.String(verbose_name="Комплектация")
-    закрепленный_кабинет = models.ForeignKey(Кабинет, on_delete=models.CASCADE, related_name='оборудование', verbose_name="Закрепленный кабинет")
-    тип = models.ForeignKey(ТипОборудования, on_delete=models.CASCADE, related_name='оборудование', verbose_name="Тип оборудования")
-    статус_починки = models.ForeignKey(СтатусПочинки, on_delete=models.CASCADE, related_name='оборудование', verbose_name="Статус починки")
-
-class Заявка(models.Model):
-    номер_акта = models.String(primary_key=True, verbose_name="Номер акта")
-    описание_неисправности = models.String(verbose_name="Описание неисправности")
-    дата_регистрации = models.DateTimeField(auto_now_add=True, verbose_name="Дата регистрации")
-    дата_выполнения = models.DateTimeField(verbose_name="Дата выполнения")
-    комментарий_исполнителя = models.String(verbose_name="Комментарий исполнителя")
-    заказчик = models.ForeignKey(Сотрудник, on_delete=models.CASCADE, related_name='заявки_заказчик', verbose_name="Заказчик")
-    назначенный_исполнитель = models.ForeignKey(Сотрудник, on_delete=models.CASCADE, related_name='заявки_исполнитель', verbose_name="Исполнитель")
-    оборудование = models.ForeignKey(Оборудование, on_delete=models.CASCADE, related_name='заявки', verbose_name="Оборудование")
-    статус = models.ForeignKey(СтатусЗаявки, on_delete=models.CASCADE, related_name='заявки', verbose_name="Статус заявки")
+#ЗАЯВКА
+class RequestFix(models.Model):
+    id = models.CharField(primary_key=True, verbose_name="Номер акта")
+    description_problem = models.CharField(verbose_name="Описание неисправности")
+    date_register = models.DateTimeField(auto_now_add=True, verbose_name="Дата регистрации")
+    date_done = models.DateTimeField(verbose_name="Дата выполнения")
+    comment_technician = models.CharField(verbose_name="Комментарий исполнителя")
+    customer = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name="Заказчик")
+    given_technician = models.ForeignKey(Employee, on_delete=models.CASCADE, verbose_name="Исполнитель")
+    equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, verbose_name="Оборудование")
+    status_done_request = models.ForeignKey(ApplicationStatus, on_delete=models.CASCADE, verbose_name="Статус заявки")
